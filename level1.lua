@@ -13,6 +13,11 @@ debugDraw = true
 require ("physics")
 physics.start(); physics.pause()
 local game = display.newGroup();
+local clouds = {}
+local total_clouds = 100            -- TOTAL AMOUNT OF CLOUDS
+local starting_y = 480              -- BOTTOM POSITION OF SCREEN
+local max_clouds_visible = 4        -- CLOUDS VISIBLE PER SCREEN
+local screen_height = 400           -- I HAVE MADE THIS LESS THAN SCREEN HEIGHT SO THERE IS A BIT OF OVERLAP. THERE WERE LARGE GAPS VERTICALLY
 
 game.x = 0
 game.y = 0
@@ -27,26 +32,19 @@ function scene:createScene( event )
         local group = self.view
         display.setDefault("background",120,185,237)
 
-        --local background = display.newImageRect( "img/SKY.png", display.contentWidth, display.contentHeight )
-        --background:setReferencePoint( display.TopLeftReferencePoint )
-        --background.x, background.y = 0, 0
-
         -- CREATE CLOUDS
-        local clouds = {}
-        local starting_y = 480
-        local max_clouds_visible = 4
-        local total_clouds = 100
-
         for i=1,total_clouds do
-               if(i%max_clouds_visible==0) then
-                   starting_y = starting_y - 400 -- TAKE SCREEN HEIGHT AWAY FROM STARTING POSITION -Y IS UP
-               end
+            if(i%max_clouds_visible==0) then                        -- EVERY MAX CLOUDS MOVE ON A SCREEN OR SO
+               starting_y = starting_y - screen_height              -- DEDUCT THE SCREEN HEIGHT FROM STARTING POSITION e.g. -DIRECTION IS UP
+            end
 
             clouds[i] = display.newImageRect( "img/CLOUD_1_LEFT_93x65.png", 93, 65 )
-            clouds[i].x = math.random(0 ,   320)       -- SCREEN WIDTH
-            clouds[i].y = starting_y  - math.random(0,  480)     -- SCREEN HEIGHT FROM STARTING POSITION
+            clouds[i].x = math.random(0 ,   320)                    -- SCREEN WIDTH
+            clouds[i].y = starting_y  - math.random(0,  480)        -- SCREEN HEIGHT FROM STARTING POSITION + RANDOM BETWEEN
+            clouds[i].speed =    math.random(0 ,  10) / 10
             group:insert(  clouds[i])
         end
+
         -- create a grass object and add physics (with custom shape)
         local grass = display.newImageRect( "img/grass.png", screenW, 82 )
         grass:setReferencePoint( display.BottomLeftReferencePoint )
@@ -104,6 +102,14 @@ function scene:createScene( event )
 
     local function update()
         moveCamera()
+
+        for i=1,total_clouds do
+            clouds[i].x = clouds[i].x+clouds[i].speed
+            print()
+            if( clouds[i].x>screenW+clouds[i].width) then
+                clouds[i].x = -clouds[i].width
+            end
+        end
     end
 
     local function keyInput(key)

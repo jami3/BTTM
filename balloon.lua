@@ -1,10 +1,11 @@
 balloon = {}
 balloon.__index = balloon
---local balloon = display.newImageRect("img/BALLOON_64X64.png", 90, 90)
+image = "img/BALLOON_64X64.png"
+air = MAX_AIR
 
 function balloon:new( group )
     local self = {}
-    self = display.newImageRect("img/BALLOON_64X64.png", 90, 90)
+    self = display.newImageRect(image, 90, 90)
     self.x, self.y = 160, -100
     self.rotation = 0
 
@@ -15,6 +16,7 @@ function balloon:new( group )
 
     function pushBalloon(event)
         self:applyForce(0,-(BALLOON_FORCE),balloon.x,balloon.y)
+        air = air - 10
     end
 
     Runtime:addEventListener( "touch", pushBalloon )
