@@ -1,0 +1,16 @@
+.idea
+*.cache
+*.csproj
+*.sln
+*.tmp
+*.user
+*.suo
+*.txt
+*.config
+*.mp3
+*.jpg
+*.png
+*.wav
+*.luac
+
+
