@@ -6,7 +6,6 @@ display.setStatusBar( display.HiddenStatusBar )
 
 -- include the Corona "storyboard" module
 local storyboard = require "storyboard"
--- physics.setDrawMode( "debug" )
 -- load menu screen
 storyboard.gotoScene( "menu" )
 

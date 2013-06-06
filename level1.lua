@@ -4,10 +4,11 @@
 --
 -----------------------------------------------------------------------------------------
 require( "balloon" )
+require( "crow" )
 
 local storyboard = require( "storyboard" )
 local scene = storyboard.newScene()
-local m_balloon
+local m_balloon, crowA
 
 debugDraw = true
 require ("physics")
@@ -29,6 +30,7 @@ local screenW, screenH, halfW = display.contentWidth, display.contentHeight, dis
 -- Called when the scene's view does not exist:
 function scene:createScene( event )
         -- SET THE VIEW
+    --physics.setDrawMode( "debug" )
         local group = self.view
         display.setDefault("background",120,185,237)
 
@@ -57,6 +59,7 @@ function scene:createScene( event )
         --group:insert( background )
         group:insert( grass)
 
+        crowA = crow:new(group,50,400)
         m_balloon =  balloon:new (group)
 
     end

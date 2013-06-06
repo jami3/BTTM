@@ -1,20 +1,11 @@
 entity = {}
-entity.__index = balloon
-image = ""
+entity.__index = entity
+local image = ""
 
 function entity:new( group,x,y )
-    local self = {}
-    self = display.newImageRect(image)
-    self.x, self.y = x, -y
-    self.rotation = 0
-    group:insert( self)
-
-    function Update(event)
-    end
-
-    Runtime:addEventListener( "enterFrame", Update )
-
-    return self
+    local instance = {group=group,x=x,y=y}
+    setmetatable(instance, { __index = self})
+    return instance
 end
 
 

@@ -1,7 +1,7 @@
 balloon = {}
 balloon.__index = balloon
-image = "img/BALLOON_64X64.png"
-air = MAX_AIR
+local image = "img/BALLOON_64X64.png"
+local air = MAX_AIR
 
 function balloon:new( group )
     local self = {}
