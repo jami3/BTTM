@@ -1,20 +1,17 @@
 local storyboard = require("storyboard")
 local scene = storyboard.newScene()
-
 local widget = require"widget"
 local scrollSpeed = 32
-local SNAP = true
+local SNAP = true -- SNAP TO GRID ON/OFF
 local loaded = false
--- forward declarations and other locals
 local screenW, screenH, halfW = display.contentWidth, display.contentHeight, display.contentWidth * 0.5
-local data = {}
-local items = {}
-local selectedItem = {}
-local level1Btn, level2Btn, upBtn, dwnBtn, currentItem, itemBg
-local numItems = 0
-local group
-local screenY = 0
+local data, selectedItem, items = {}, {}, {}
 
+local level1Btn, level2Btn, upBtn, dwnBtn, currentItem, itemBg
+local numItems, screenY = 0, 0
+local view -- THE GROUP
+
+-- REMOVE THE LEVEL BUTTONS
 local function removeButtons()
 	if level1Btn then
 		level1Btn:removeSelf()
@@ -36,12 +33,11 @@ end
 
 
 local displayItemMenu = function(item)
-
 end
 
 
 local function placeItem(event)
-	if (selectedItem)and  (event.phase == "ended") then
+	if (selectedItem) and (event.phase == "ended") then
 		local x, y
 		if (SNAP) then
 			x, y = snapToTile(event.x, event.y)
@@ -59,12 +55,13 @@ local function placeItem(event)
 		items[numItems].x, items[numItems].y = x, y
 		items[numItems].name = selectedItem.name
 
-		group:insert(items[numItems])
+		view:insert(items[numItems])
 
 		numItems = numItems + 1
 	end
 end
 
+-- CHANGE THE SELECTED ITEM
 local changeItem = function(item)
 
 	if (item == "crow") then
@@ -84,10 +81,13 @@ local changeItem = function(item)
 		itemBg = nil
 	end
 
-	itemBg = display.newImageRect("img/gui/iconBg.png", 32, 32)
+	-- THE ICON SHOWING THE CURRENTLY SELECTED ITEM IMAGE, THIS DOUBLES UP AS A DISPLAY MENU BUTTON
+	itemBg = display.newImageRect("img/gui/iconBg.png", 32, 32) -- THE BACKGROUND
 	itemBg.x = 300
 	itemBg.y = -16
-	currentItem = display.newImageRect(selectedItem.left, 32, 32)
+	itemBg:addEventListener("touch", displayItemMenu)
+
+	currentItem = display.newImageRect(selectedItem.left, 32, 32) -- THE SELECTED IMAGE
 	currentItem.x = 300
 	currentItem.y = -16
 	currentItem:addEventListener("touch", displayItemMenu)
@@ -95,20 +95,18 @@ end
 
 local function moveCamera(dir)
 	if (dir == "up") then
-		group.y = group.y + scrollSpeed
+		view.y = view.y + scrollSpeed
 		screenY = screenY + scrollSpeed
 	elseif (dir == "down") then
-		group.y = group.y - scrollSpeed
+		view.y = view.y - scrollSpeed
 		screenY = screenY - scrollSpeed
 	end
 end
-
 
 local loadLevel = function(level)
 
 	removeButtons()
 	changeItem("crow")
-
 
 	Runtime:addEventListener("touch", placeItem)
 
@@ -146,50 +144,44 @@ local loadLevel2 = function(event)
 	loadLevel()
 end
 
+local newButton = function(name, label, y, pressFunc, releaseFunc)
+	local btn = widget.newButton{
+		id = name,
+		defaultFile = "img/gui/buttonBlue.png",
+		label = label,
+		emboss = true,
+		onRelease = releaseFunc
+	}
+	btn.x, btn.y = 10 + (btn.width / 2), y
 
+	return btn
+end
 
 function scene:createScene(event)
 
-	group = self.view
+	view = self.view
 	display.setDefault("background", 120, 185, 237)
 
-	level1Btn = widget.newButton{
-		id = "level1Btn",
-		defaultFile = "img/gui/buttonBlue.png",
-		label = "LEVEL 1",
-		emboss = true,
-		onRelease = loadLevel1,
-	}
+	level1Btn = newButton("level1Btn", "LEVEL 1",0,  nil, loadLevel1)
+	level2Btn = newButton("level2Btn", "LEVEL 2",level1Btn.height,  nil, loadLevel1)
 
-	level2Btn = widget.newButton{
-		id = "level2Btn",
-		defaultFile = "img/gui/buttonBlue.png",
-		label = "LEVEL 2",
-		emboss = true,
-		onRelease = loadLevel2
-	}
-
-	level1Btn.x = 10 + (level1Btn.width / 2)
-	level1Btn.y = 0
-	level2Btn.x = 10 + (level1Btn.width / 2)
-	level2Btn.y = level1Btn.height * 1
 end
 
 
 function scene:enterScene(event) -- Called immediately after scene has moved onscreen:
 
-	local group = self.view
+	local view = self.view
 end
 
 -- Called when scene is about to move off-screen:
 function scene:exitScene(event)
-	local group = self.view
+	local view = self.view
 	removeButtons()
 end
 
 -- If scene's view is removed, scene:destroyScene() will be called just prior to:
 function scene:destroyScene(event)
-	local group = self.view
+	local view = self.view
 end
 
 scene:addEventListener("createScene", scene)
