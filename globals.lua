@@ -10,7 +10,7 @@ local function physicsToggle(event)
             physics.setDrawMode( "normal" )
             debugDraw = false
         elseif ( not debugDraw ) and ( event.phase == "began" ) then
-            physics.setDrawMode( "debug" )
+	        physics.setDrawMode("debug")
             debugDraw = true
         end
 

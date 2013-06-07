@@ -1,18 +1,18 @@
-require ("globals")
+require("globals")
 
 gameStarted = false;
 -- hide the status bar
-display.setStatusBar( display.HiddenStatusBar )
+display.setStatusBar(display.HiddenStatusBar)
 
 -- include the Corona "storyboard" module
-local storyboard = require "storyboard"
+local storyboard = require"storyboard"
 -- load menu screen
-storyboard.gotoScene( "menu" )
+storyboard.gotoScene("menu")
 
 local function Update()
-    if(gameStarted) then
-        storyboard.Update()
-    end
+	if (gameStarted) then
+		storyboard.Update()
+	end
 end
 
-Runtime:addEventListener( "Update", Update )
+Runtime:addEventListener("Update", Update)
