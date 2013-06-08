@@ -53,7 +53,7 @@ function scene:createScene(event)
 	group:insert(grass)
 
 	crowA = crow:new(group, 50, 400)
-	m_balloon = balloon:new(group)
+	m_balloon = balloon:new(group,160, -100)
 end
 
 -- Called immediately after scene has moved onscreen:

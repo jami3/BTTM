@@ -2,14 +2,22 @@ local storyboard = require("storyboard")
 local scene = storyboard.newScene()
 local widget = require"widget"
 local scrollSpeed = 32
-local SNAP = true -- SNAP TO GRID ON/OFF
-local loaded = false
-local screenW, screenH, halfW = display.contentWidth, display.contentHeight, display.contentWidth * 0.5
-local data, selectedItem, items = {}, {}, {}
+local snap = true -- SNAP TO GRID ON/OFF
+local loaded, canPlaceItems = false, false
 
-local level1Btn, level2Btn, upBtn, dwnBtn, currentItem, itemBg
+local level1Items = {
+	crow = { name = "crow", leftImage = "img/CROW.png", rightImage = "img/CROW_FACE_LEFT.png" },
+	fan = { name = "fan", leftImage = "img/FAN_V1_LEFT.png", rightImage = "img/FAN_V1.png" },
+	pigeon = { name = "pigeon", leftImage = "img/PIGEON_64X64.png", rightImage = "img/PIGEON_64X64_RIGHT.png" },
+	coin = { name = "coin", leftImage = "img/COIN_32x32_V1.png", rightImage = "img/COIN_32x32_V1.png" }
+}
+
+local screenW, screenH, halfW = display.contentWidth, display.contentHeight, display.contentWidth * 0.5
+local data, selectedItem, items, menuItems = {}, {}, {}, {}
+local level1Btn, level2Btn, upBtn, dwnBtn, currentItem, itemBg -- BUTTONS
 local numItems, screenY = 0, 0
-local view -- THE GROUP
+local view, changeItem, hideItemMenu -- FORWARD REFS
+
 
 -- REMOVE THE LEVEL BUTTONS
 local function removeButtons()
@@ -32,47 +40,92 @@ local function snapToTile(x, y)
 end
 
 
-local displayItemMenu = function(item)
+local function isTileFree(x, y)
+	for i = 0, numItems do
+		if (items[i]) then
+			if (items[i].x == x) and (items[i].y == y) then
+				print("Tile already has something on it")
+				return false, items[i]
+			end
+		end
+	end
+
+	return true, nil
 end
 
-
 local function placeItem(event)
-	if (selectedItem) and (event.phase == "ended") then
+
+	if (canPlaceItems) and (selectedItem) and (event.phase == "ended") then
 		local x, y
-		if (SNAP) then
+		if (snap) then
 			x, y = snapToTile(event.x, event.y)
 		else
 			x, y = event.x, event.y
 		end
+
 		y = y - screenY
 
-		if (x > halfW) then
-			items[numItems] = display.newImage(selectedItem.right)
-		else
-			items[numItems] = display.newImage(selectedItem.left)
+		if (isTileFree(x, y)) then
+
+			if (x > halfW) then
+				items[numItems] = display.newImage(selectedItem.rightImage)
+			else
+				items[numItems] = display.newImage(selectedItem.leftImage)
+			end
+
+			items[numItems].x, items[numItems].y = x, y
+			items[numItems].name = selectedItem.name
+
+			view:insert(items[numItems])
+
+			numItems = numItems + 1
+			print("numitems = ", numItems)
 		end
+	end
+end
 
-		items[numItems].x, items[numItems].y = x, y
-		items[numItems].name = selectedItem.name
+local newItem = function(self)
+	if (self.phase == "began") then
+		canPlaceItems = false
+	end
+	changeItem(self.target)
+	if (self.phase == "ended") then
+		canPlaceItems = true
+	end
+end
 
-		view:insert(items[numItems])
+local displayItemMenu = function(item)
+	canPlaceItems = false
+	local num = 5
 
-		numItems = numItems + 1
+	for i, item in pairs(level1Items) do
+		print(level1Items[i].leftImage)
+		menuItems[i] = display.newImageRect(level1Items[i].leftImage, 32, 32)
+		menuItems[i].name = level1Items[i].name
+		menuItems[i].leftImage, menuItems[i].rightImage = level1Items[i].leftImage, level1Items[i].rightImage
+		menuItems[i].x, menuItems[i].y = 16, 105 + num
+		num = num + 32
+
+		menuItems[i]:addEventListener("touch", newItem)
+	end
+
+
+	print("DISPLAY ITEMS")
+end
+
+hideItemMenu = function(item)
+
+
+	for i, item in pairs(menuItems) do
+		menuItems[i]:removeSelf()
+		menuItems[i] = nil
 	end
 end
 
 -- CHANGE THE SELECTED ITEM
-local changeItem = function(item)
-
-	if (item == "crow") then
-		selectedItem = { name = "crow", left = "img/CROW.png", right = "img/CROW_FACE_LEFT.png" }
-	elseif (item == "fan") then
-		selectedItem = { name = "fan", left = "img/FAN_V1_LEFT", right = "img/FAN_V1.png" }
-	elseif (item == "pigeon") then
-		selectedItem = { name = "pigeon", left = "img/PIGEON_64X64.png", right = "img/PIGEON_64X64_RIGHT.png" }
-	elseif (item == "coin") then
-		selectedItem = { name = "coin", left = "img/COIN_32x32_V1.png", right = "img/COIN_32x32_V1.png" }
-	end
+changeItem = function(item)
+	print("item changed", item.name)
+	selectedItem = item
 
 	if (currentItem) then
 		currentItem:removeSelf()
@@ -87,11 +140,14 @@ local changeItem = function(item)
 	itemBg.y = -16
 	itemBg:addEventListener("touch", displayItemMenu)
 
-	currentItem = display.newImageRect(selectedItem.left, 32, 32) -- THE SELECTED IMAGE
+	currentItem = display.newImageRect(selectedItem.leftImage, 32, 32) -- THE SELECTED IMAGE
 	currentItem.x = 300
 	currentItem.y = -16
 	currentItem:addEventListener("touch", displayItemMenu)
+	hideItemMenu()
 end
+
+
 
 local function moveCamera(dir)
 	if (dir == "up") then
@@ -106,9 +162,22 @@ end
 local loadLevel = function(level)
 
 	removeButtons()
-	changeItem("crow")
+	changeItem(level1Items.crow)
 
 	Runtime:addEventListener("touch", placeItem)
+	print(screenH)
+
+	-- DRAW BACKGROUND GRID
+	local tile = {}
+	local num = 0
+	for x = -16, screenW + 16, 32 do
+		for y = screenH + 48, -48, -32 do
+			tile[x * y] = display.newImage("img/gui/grid_tile.png")
+			tile[x * y].x, tile[x * y].y = x, y
+			tile[x * y].alpha = 0.1
+			print(x, y)
+		end
+	end
 
 	local function scrollUp()
 		moveCamera("up")
@@ -134,6 +203,7 @@ local loadLevel = function(level)
 
 	upBtn.x, upBtn.y = (upBtn.width / 2) + 5, -upBtn.height / 2
 	downBtn.x, downBtn.y = (upBtn.width / 2) + 5, (-upBtn.height / 2) + upBtn.height + 5
+	canPlaceItems = true
 end
 
 local loadLevel1 = function(event)
@@ -162,9 +232,8 @@ function scene:createScene(event)
 	view = self.view
 	display.setDefault("background", 120, 185, 237)
 
-	level1Btn = newButton("level1Btn", "LEVEL 1",0,  nil, loadLevel1)
-	level2Btn = newButton("level2Btn", "LEVEL 2",level1Btn.height,  nil, loadLevel1)
-
+	level1Btn = newButton("level1Btn", "LEVEL 1", 0, nil, loadLevel1)
+	level2Btn = newButton("level2Btn", "LEVEL 2", level1Btn.height, nil, loadLevel1)
 end
 
 

@@ -3,10 +3,10 @@ balloon.__index = balloon
 local image = "img/BALLOON_64X64.png"
 local air = MAX_AIR
 
-function balloon:new(group)
+function balloon:new(group, x, y)
 	local self = {}
 	self = display.newImageRect(image, 90, 90)
-	self.x, self.y = 160, -100
+	self.x, self.y =x,y
 	self.rotation = 0
 
 	physics.addBody(self, { density = BALLOON_DENSITY, friction = 0.3, bounce = 0.5, radius = 32 })
